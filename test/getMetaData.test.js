@@ -10,7 +10,7 @@ describe('getMetaData', function() {
 
         try {
           const engagement = new Engagement(settings);
-          json = await engagement.getMetaData();         
+          json = await engagement.getMetaData();      
         }
         catch (err) {
             json = err;

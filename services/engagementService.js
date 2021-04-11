@@ -1,7 +1,5 @@
 var avro = require('avro-js');
-const config = require('config');
 const { Storage } = require('@google-cloud/storage');
-const googleCloudConfig = require('config').get('googleCloud');
 const path = require('path');
 
 class Engagement {
@@ -9,16 +7,20 @@ class Engagement {
         this.serviceAccount = settings.serviceAccount;
         this.decryptionKey = settings.decryptionKey;
         this.bucketName = settings.folderPath;
+        this.projectID = settings.projectID;
+        this.metadataFileNamePrefix = 'METADATA';
+        this.customersSubFolder = 'customers';
+        this.avroFileExtenssion = '.avro';
     }    
 
     // Public methods
     async getMetaData() {
         try {
             const filesInfo = await this._getFiles();
-            let fileStream = filesInfo.find(file => file.name.includes(config.metadataFileNamePrefix));
+            let fileStream = filesInfo.find(file => file.name.includes(this.metadataFileNamePrefix));
             let json = await this._downloadFile(fileStream.name);
     
-            return json;
+            return json[0];
         }
         catch (err) {
             throw err.message;
@@ -27,7 +29,7 @@ class Engagement {
 
     async getCustomersBatches() {       
         try {
-            const files = await this._getFiles(config.customersSubFolder);
+            const files = await this._getFiles(this.customersSubFolder);
 
             const batches = files.map((file) => {
                 // for testing file.id = 'customers%2Fasdas%2F123.json'
@@ -63,7 +65,7 @@ class Engagement {
         const keyFileName = path.join(__dirname, this.serviceAccount);
 
         const storage = new Storage({
-            projectId: googleCloudConfig.projectId,
+            projectId: this.projectID,
             keyFilename: keyFileName
         });
 
@@ -138,7 +140,7 @@ class Engagement {
     
             const [files] = await this._storage.bucket(`${this.bucketName}`).getFiles(options);
     
-            const fileInfo = files.filter(file => file.name.includes(config.avroFileExtenssion));
+            const fileInfo = files.filter(file => file.name.includes(this.avroFileExtenssion));
             return fileInfo;
         }
         catch (err) {

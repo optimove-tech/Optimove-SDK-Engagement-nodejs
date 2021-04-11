@@ -1,8 +1,7 @@
-const config = require('config');
 const expect = require('chai').expect;
 const { Storage } = require('@google-cloud/storage');
-const googleCloudConfig = require('config').get('googleCloud');
-const key = require('../settings.json').decryptionKey;
+const settings = require('../settings.json');
+const key = settings.key;
 
 describe('uploadFile', function() {
     describe('upload', function() {
@@ -11,13 +10,13 @@ describe('uploadFile', function() {
         let res;
 
         try {
-            const bucketName = googleCloudConfig.bucketName;
+            const bucketName = settings.folderPath;
             const secure = key ? 'SECURE' : 'NOT_SECURE';
             let options = key ? { encryptionKey: Buffer.from(key, 'base64') } : {};
             options.destination = `METADATA_file_${secure}.avro`;
         
             const storage = new Storage({
-                projectId: googleCloudConfig.projectId,
+                projectId: settings.projectID,
                 keyFilename: './gcs/serviceAcount.json',
             });    
         
