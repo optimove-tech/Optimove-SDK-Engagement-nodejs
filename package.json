@@ -18,5 +18,10 @@
     "test": "test"
   },
   "devDependencies": {},
-  "description": ""
+  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/optimove-tech/Optimove-SDK-Engagement-nodejs.git"
+  },
+  "homepage": "https://github.com/optimove-tech/Optimove-SDK-Engagement-nodejs"
 }

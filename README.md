@@ -3,7 +3,7 @@
 ### How to use:
 
 ```javascript
-const Engager = require('optimove-engagement')
+const Engager = require('optimove-sdk-engagement-nodejs')
 
 const settings = {
     serviceAccount: webhookServiceAccount,
