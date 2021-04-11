@@ -1,0 +1,10 @@
+{    
+    "metadataFileNamePrefix": "METADATA",
+    "avroFileExtenssion": ".avro",
+    "customersSubFolder": "customers",
+    "googleCloud": {
+        "projectId": "optimove-dev",
+        "bucketName": "optihub-dev-metrics",
+        "keyFileName": "../gcs/serviceAcount.json"
+    }
+}
