@@ -1,15 +1,16 @@
-var avro = require('avro-js');
+const avro = require('avro-js');
 const { Storage } = require('@google-cloud/storage');
 const path = require('path');
 const fs = require('fs');
 const { resolve } = require('path');
+const settings = require('../settings.json');
 
 class Engagement {
     constructor(settings) {
-        this.serviceAccount = settings.serviceAccount;
+        this.serviceAccount = settings.serviceAccount || settings.serviceAccount;
         this.decryptionKey = settings.decryptionKey;
         this.bucketName = settings.folderPath;
-        this.projectID = settings.projectID;
+        this.projectID = this.decryptionKey ? '' : settings.projectID;
         this.metadataFileNamePrefix = 'METADATA';
         this.customersSubFolder = 'customers';
         this.avroFileExtenssion = '.avro';
@@ -22,8 +23,24 @@ class Engagement {
             const filesInfo = await this._getFiles();
             let fileStream = filesInfo.find(file => file.name.includes(this.metadataFileNamePrefix));
             let json = await this._downloadFile(fileStream.name);
-    
-            return json[0];
+            json = json[0];
+
+            json = {
+                channelID: json.ChannelID,
+                channelName: json.ChannelName,
+                engagementID: json.EngagementID,
+                numberOfCustomers: json.NumberOfCustomers,
+                numberOfFiles: json.NumberOfFiles,
+                planDetailID: json.PlanDetailID,
+                planID: json.PlanID,
+                promotions: json.Promotions,
+                scheduledTime: json.ScheduledTime,
+                targetGroupName: json.TargetGroupName,
+                templateID: json.TemplateID,
+                templateName: json.TemplateName
+            }
+
+            return json
         }
         catch (err) {
             throw err.message;

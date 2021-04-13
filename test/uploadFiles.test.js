@@ -13,16 +13,25 @@ describe('uploadFile', function() {
             const bucketName = settings.folderPath;
             const secure = key ? 'SECURE' : 'NOT_SECURE';
             let options = key ? { encryptionKey: Buffer.from(key, 'base64') } : {};
-            options.destination = `METADATA_file_${secure}.avro`;
+            
         
             const storage = new Storage({
                 projectId: settings.projectID,
                 keyFilename: './gcs/serviceAcount.json',
             });    
         
-            const filePath = `./files/metadata/METADATA_file.avro`;
-        
-            await storage.bucket(bucketName).upload(filePath, options);  
+            options.destination = `METADATA_file_${secure}.avro`;
+            const metadataFilePath = `./files/metadata/METADATA_file.avro`;
+            await storage.bucket(bucketName).upload(metadataFilePath, options); 
+            
+            options.destination = `customers/customers1_${secure}.avro`;
+            const customers1FilePath = `./files/customers/customers1.avro`;
+            await storage.bucket(bucketName).upload(customers1FilePath, options); 
+
+            options.destination = `customers/customers2_${secure}.avro`;
+            const customers2FilePath = `./files/customers/customers2.avro`;
+            await storage.bucket(bucketName).upload(customers2FilePath, options); 
+            
             res = true;
         }
         catch (err) {
