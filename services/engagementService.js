@@ -1,6 +1,8 @@
 var avro = require('avro-js');
 const { Storage } = require('@google-cloud/storage');
 const path = require('path');
+const fs = require('fs');
+const { resolve } = require('path');
 
 class Engagement {
     constructor(settings) {
@@ -11,6 +13,7 @@ class Engagement {
         this.metadataFileNamePrefix = 'METADATA';
         this.customersSubFolder = 'customers';
         this.avroFileExtenssion = '.avro';
+        this.serviceAccountFilePath;
     }    
 
     // Public methods
@@ -61,15 +64,37 @@ class Engagement {
     }    
 
     // Private methods
-    get _storage() {
-        const keyFileName = path.join(__dirname, this.serviceAccount);
+    _getStorage() {
+        return new Promise(async (resolve, reject) => {
+            // const keyFileName = path.join(__dirname, '../../../', this.serviceAccount);
 
-        const storage = new Storage({
-            projectId: this.projectID,
-            keyFilename: keyFileName
-        });
+            if (!this.storage) {
+                const rand = Date.now() + '-' + Math.random().toString(36).substring(7);
+                const serviceAccountString = Buffer.from(this.serviceAccount, 'base64').toString('ascii');
+                const filePath = `./accounts/${rand}.json`;
+    
+                fs.writeFile(filePath, serviceAccountString, async() => {
+                    this.serviceAccountFilePath = filePath;
+    
+                    this.storage = await this._initStorage();
+                    resolve(this.storage);
+                })
+            }
+            else {
+                resolve(this.storage);
+            }
+        })
+    }
 
-        return storage;
+    _initStorage() {
+        return new Promise((resolve, reject) => {
+            const storage = new Storage({
+                projectId: this.projectID,
+                keyFilename: this.serviceAccountFilePath
+            });
+
+            resolve(storage);
+        })
     }
     
     async _getCustomersBatchFile(batchName) {
@@ -92,14 +117,17 @@ class Engagement {
             };
             
             try {
+                const _storage = await this._getStorage();
+
                 if (this.decryptionKey) {
                     console.log('Downloading secured file');
                     console.log('decryptionKey:', this.decryptionKey);
-                    stream = await this._storage.bucket(this.bucketName).file(srcFileName).setEncryptionKey(Buffer.from(this.decryptionKey, 'base64')).createReadStream();
+                    
+                    stream = await _storage.bucket(this.bucketName).file(srcFileName).setEncryptionKey(Buffer.from(this.decryptionKey, 'base64')).createReadStream();
                 }
                 else {
                     console.log('Downloading not secured file');
-                    stream = await this._storage.bucket(this.bucketName).file(srcFileName).createReadStream();
+                    stream = await _storage.bucket(this.bucketName).file(srcFileName).createReadStream();
                 }
             }
             catch (err) {
@@ -134,11 +162,13 @@ class Engagement {
         // Get file should get the list of a content folder with all files streams, just need to take (filter) the avros files
 
         try {
+            const _storage = await this._getStorage();
+
             const options = {
                 prefix: prefix || '',
             };
     
-            const [files] = await this._storage.bucket(`${this.bucketName}`).getFiles(options);
+            const [files] = await _storage.bucket(`${this.bucketName}`).getFiles(options);
     
             const fileInfo = files.filter(file => file.name.includes(this.avroFileExtenssion));
             return fileInfo;
