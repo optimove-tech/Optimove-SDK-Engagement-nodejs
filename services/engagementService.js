@@ -2,12 +2,11 @@ const avro = require('avro-js');
 const { Storage } = require('@google-cloud/storage');
 const path = require('path');
 const fs = require('fs');
-const { resolve } = require('path');
-const settings = require('../settings.json');
+const testConfiguration = require('../testConfiguration.json');
 
 class Engagement {
     constructor(settings) {
-        this.serviceAccount = settings.serviceAccount || settings.serviceAccount;
+        this.serviceAccount = settings.serviceAccount || testConfiguration.serviceAccount;
         this.decryptionKey = settings.decryptionKey;
         this.bucketName = settings.folderPath;
         this.projectID = this.decryptionKey ? '' : settings.projectID;

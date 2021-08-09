@@ -1,5 +1,5 @@
 const expect = require('chai').expect;
-const settings = require('../settings.json');
+const settings = require('../testConfiguration.json');
 const Engagement = require('../services/engagementService');
 
 describe('getCustomerBatches', function() {

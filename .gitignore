@@ -1,4 +1,4 @@
 node_modules/*
 client.js
 gcs/*
-settings.json
+testConfiguration.json

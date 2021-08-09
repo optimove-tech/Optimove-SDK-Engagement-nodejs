@@ -1,6 +1,6 @@
 const expect = require('chai').expect;
 const { Storage } = require('@google-cloud/storage');
-const settings = require('../settings.json');
+const settings = require('../testConfiguration.json');
 const key = settings.key;
 
 describe('uploadFile', function() {
