@@ -2,53 +2,72 @@ const avro = require('avro-js');
 const { Storage } = require('@google-cloud/storage');
 const path = require('path');
 const fs = require('fs');
-const testConfiguration = require('../testConfiguration.json');
 
 class Engagement {
     constructor(settings) {
-        this.serviceAccount = settings.serviceAccount || testConfiguration.serviceAccount;
+        this.serviceAccount = settings.serviceAccount;
         this.decryptionKey = settings.decryptionKey;
-        this.bucketName = settings.folderPath;
         this.projectID = this.decryptionKey ? '' : settings.projectID;
-        this.metadataFileNamePrefix = 'METADATA';
+        this.metadataFileNamePrefix = 'metadata';
         this.customersSubFolder = 'customers';
         this.avroFileExtenssion = '.avro';
         this.serviceAccountFilePath;
+        this.tenantID = settings.tenantID;
+
+        this.bucketName = settings.bucketName;
+        this.customersFolderPath = settings.customersFolderPath;
+        this.metadataFilePath = settings.metadataFilePath;
     }    
 
     // Public methods
     async getMetaData() {
         try {
-            const filesInfo = await this._getFiles();
+            const filesInfo = await this._getFiles(this.metadataFilePath, false);
+
+            if (!filesInfo || !filesInfo.length)
+                throw `Metadata for folder ${this.metadataFilePath} does not exist`;
+
             let fileStream = filesInfo.find(file => file.name.includes(this.metadataFileNamePrefix));
-            let json = await this._downloadFile(fileStream.name);
-            json = json[0];
+            let json = await this._downloadFile(fileStream.name, false);
+
+            if (!json)
+                throw new Error('metadata is emprty or doesnt exist');
 
             json = {
+                actionID: json.ActionID,
+                actionName: json.ActionName,
+                campaignID: json.CampaignID,
+                campaignPlanID: json.CampaignPlanID,
                 channelID: json.ChannelID,
                 channelName: json.ChannelName,
                 engagementID: json.EngagementID,
                 numberOfCustomers: json.NumberOfCustomers,
                 numberOfFiles: json.NumberOfFiles,
-                planDetailID: json.PlanDetailID,
-                planID: json.PlanID,
-                promotions: json.Promotions,
+                planDetailChannelID: json.PlanDetailChannelID,
+                promotions: json.Promotions,                
                 scheduledTime: json.ScheduledTime,
                 targetGroupName: json.TargetGroupName,
-                templateID: json.TemplateID,
-                templateName: json.TemplateName
+                templateID: parseInt(json.TemplateID),
+                templateName: json.TemplateName,
+                tenantID: parseInt(this.tenantID),
+                bucketName: this.bucketName,
+                customersFolderPath: this.customersFolderPath,
+                metadataFilePath: this.metadataFilePath
             }
 
-            return json
+            console.log('Metadata successfully received');
+
+            return json;
         }
         catch (err) {
-            throw err.message;
+            console.error('Couldn\'t receive a metadata', err);
+            throw err;
         }
     }
 
     async getCustomersBatches() {       
         try {
-            const files = await this._getFiles(this.customersSubFolder);
+            const files = await this._getFiles(this.customersFolderPath);
 
             const batches = files.map((file) => {
                 // for testing file.id = 'customers%2Fasdas%2F123.json'
@@ -71,33 +90,41 @@ class Engagement {
         try {
             const customersBatchFile = await this._getCustomersBatchFile(batchName);
     
-            let json = await this._downloadFile(customersBatchFile.name);
+            let json = await this._downloadFile(customersBatchFile.name, true);
             return json;    
         }
         catch (err) {
             throw err.message;
         }
-    }    
+    }
 
     // Private methods
     _getStorage() {
         return new Promise(async (resolve, reject) => {
-            // const keyFileName = path.join(__dirname, '../../../', this.serviceAccount);
+            try {
+                if (!this.storage) {
+                    const rand = Date.now() + '-' + Math.random().toString(36).substring(7);
+                    const serviceAccountString = Buffer.from(this.serviceAccount, 'base64').toString('ascii');
+                    const fileLocation = path.join(__dirname, '..', 'accounts');
+                    const filePath = path.join(fileLocation, `${rand}.json`);
+    
+                    if (!fs.existsSync(fileLocation)){
+                        fs.mkdirSync(fileLocation);
+                    }                   
 
-            if (!this.storage) {
-                const rand = Date.now() + '-' + Math.random().toString(36).substring(7);
-                const serviceAccountString = Buffer.from(this.serviceAccount, 'base64').toString('ascii');
-                const filePath = `./accounts/${rand}.json`;
-    
-                fs.writeFile(filePath, serviceAccountString, async() => {
-                    this.serviceAccountFilePath = filePath;
-    
-                    this.storage = await this._initStorage();
+                    fs.writeFile(filePath, serviceAccountString, async() => {
+                        this.serviceAccountFilePath = filePath;
+        
+                        this.storage = await this._initStorage();
+                        resolve(this.storage);
+                    })
+                }
+                else {
                     resolve(this.storage);
-                })
+                }
             }
-            else {
-                resolve(this.storage);
+            catch (err) {
+                reject(`_getStorage error - ${err}`);
             }
         })
     }
@@ -123,7 +150,7 @@ class Engagement {
         }
     }
 
-    _downloadFile(srcFileName) {   
+    _downloadFile(srcFileName, isAvro) {   
         return new Promise(async (resolve, reject) => {
             let stream;
             let jsonString = '';
@@ -136,37 +163,53 @@ class Engagement {
                 const _storage = await this._getStorage();
 
                 if (this.decryptionKey) {
-                    console.log('Downloading secured file');
-                    console.log('decryptionKey:', this.decryptionKey);
-                    
+                    console.log(`Downloading secured file, bucket name: ${this.bucketName}, fileName: ${srcFileName}`);
                     stream = await _storage.bucket(this.bucketName).file(srcFileName).setEncryptionKey(Buffer.from(this.decryptionKey, 'base64')).createReadStream();
+                    console.log(`Done downloading secured file, bucket name: ${this.bucketName}, fileName: ${srcFileName}`);
                 }
                 else {
-                    console.log('Downloading not secured file');
+                    console.log(`Downloading not secured file, bucket name: ${this.bucketName}, fileName: ${srcFileName}`);
                     stream = await _storage.bucket(this.bucketName).file(srcFileName).createReadStream();
+                    console.log(`Done downloading not secured file, bucket name: ${this.bucketName}, fileName: ${srcFileName}`);
                 }
             }
             catch (err) {
+                console.error('Error downloading file', err);
                 reject(err);
             }
     
             try {
-                stream
-                .on('error', (err) => {
-                    reject(err);
-                })
-                .pipe(new avro.streams.BlockDecoder())
-                .on('data', function (item) {                    
-                    jsonString += JSON.stringify(item) + ',';
-                })
-                .on('end', () => {
-                    //remove the last ',' adn add [] for creating an array
-                    jsonString = "[" + jsonString.slice(0, -1) + "]";
-                    resolve(JSON.parse(jsonString));
-                })
-                .on('error', (err) => {
-                    reject(err);
-                })
+                if (isAvro) {
+                    resolve(stream.pipe(new avro.streams.BlockDecoder()));
+                    // stream
+                    // .on('error', (err) => {
+                    //     reject(err);
+                    // })
+                    // .pipe(new avro.streams.BlockDecoder())
+                    // .on('data', function (item) {                    
+                    //     jsonString += JSON.stringify(item) + ',';
+                    // })
+                    // .on('end', () => {
+                    //     //remove the last ',' adn add [] for creating an array
+                    //     jsonString = "[" + jsonString.slice(0, -1) + "]";
+                    //     resolve(JSON.parse(jsonString));
+                    // })
+                    // .on('error', (err) => {
+                    //     reject(err);
+                    // })
+                }
+                else {
+                    stream
+                    .on('error', (err) => {
+                        reject(err);
+                    })
+                    .on('data', (item) => {                   
+                        jsonString += item.toString();
+                    })
+                    .on('end', () => {
+                        resolve(JSON.parse(jsonString));
+                    })
+                }
             }
             catch(err) {
                 reject(err);
@@ -174,19 +217,19 @@ class Engagement {
         })    
     }
 
-    async _getFiles(prefix) {
+    async _getFiles(prefix, avroOnly = true) {
         // Get file should get the list of a content folder with all files streams, just need to take (filter) the avros files
 
         try {
             const _storage = await this._getStorage();
 
             const options = {
-                prefix: prefix || '',
+                prefix
             };
     
             const [files] = await _storage.bucket(`${this.bucketName}`).getFiles(options);
     
-            const fileInfo = files.filter(file => file.name.includes(this.avroFileExtenssion));
+            const fileInfo = avroOnly? files.filter(file => file.name.includes(this.avroFileExtenssion)): files;
             return fileInfo;
         }
         catch (err) {
