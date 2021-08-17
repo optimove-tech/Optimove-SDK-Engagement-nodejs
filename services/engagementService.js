@@ -180,7 +180,7 @@ class Engagement {
     
             try {
                 if (isAvro) {
-                    resolve(stream.pipe(new avro.streams.BlockDecoder()));
+                    resolve(stream.pipe(new avro.streams.BlockDecoder()))
                     // stream
                     // .on('error', (err) => {
                     //     reject(err);
