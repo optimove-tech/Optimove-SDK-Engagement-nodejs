@@ -53,7 +53,8 @@ class Engagement {
                 tenantID: parseInt(this.tenantID),
                 bucketName: this.bucketName,
                 customersFolderPath: this.customersFolderPath,
-                metadataFilePath: this.metadataFilePath
+                metadataFilePath: this.metadataFilePath,
+                duration: json.Duration
             }
 
             console.log('Metadata successfully received - new');
