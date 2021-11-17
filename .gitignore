@@ -2,3 +2,5 @@ node_modules/*
 client.js
 gcs/*
 testConfiguration.json
+accounts/*
+files/*

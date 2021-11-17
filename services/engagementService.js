@@ -13,10 +13,11 @@ class Engagement {
         this.avroFileExtenssion = '.avro';
         this.serviceAccountFilePath;
         this.tenantID = settings.tenantID;
-
         this.bucketName = settings.bucketName;
         this.customersFolderPath = settings.customersFolderPath;
         this.metadataFilePath = settings.metadataFilePath;
+        this.envExt = process.env.NODE_ENV == 'production' ? 'us' : 'dev';
+        this.uploadBucketName = `optihub-campaigns-files-${this.envExt}`;
     }    
 
     // Public methods
@@ -55,7 +56,7 @@ class Engagement {
                 metadataFilePath: this.metadataFilePath
             }
 
-            console.log('Metadata successfully received');
+            console.log('Metadata successfully received - new');
 
             return json;
         }
@@ -70,7 +71,7 @@ class Engagement {
             const files = await this._getFiles(this.customersFolderPath);
 
             const batches = files.map((file) => {
-                // for testing file.id = 'customers%2Fasdas%2F123.json'
+                // for testing file.id = 'customers%2abcd%2F123.json'
                 const index = file.id.lastIndexOf('%2F');
     
                 return {
@@ -82,20 +83,45 @@ class Engagement {
             return batches;
         } 
         catch (err) {
-            throw err.message;
+            throw err.toString();
         }
     }
 
-    async getCustomersByBatch(batchName) {
-        try {
-            const customersBatchFile = await this._getCustomersBatchFile(batchName);
-    
-            let json = await this._downloadFile(customersBatchFile.name, true);
-            return json;    
+    async getCustomersByBatch(batch) {
+        try {                
+            let fileStream = await this._downloadFile(batch, true);
+            return fileStream;    
+        }
+        catch (err) {
+            throw err.toString();
+        }
+    }
+
+    async getCampaignFileStream(fileName) {
+        try {            
+            const _storage = await this._getStorage();
+            const stream = await _storage.bucket(this.uploadBucketName).file(fileName).createReadStream();
+            return stream;
         }
         catch (err) {
             throw err.message;
         }
+    }
+
+    async uploadFile(stream, path) {
+       return new Promise(async (resolve, reject) => {
+            const _storage = await this._getStorage();
+            const blobStream = _storage.bucket(this.uploadBucketName).file(path).createWriteStream();
+
+            stream.pipe(blobStream)
+            .on('error', function(err) {
+                console.log(err);
+                reject(err);
+            })
+            .on('finish', function() {
+                resolve();
+            });
+        })
     }
 
     // Private methods
@@ -105,8 +131,8 @@ class Engagement {
                 if (!this.storage) {
                     const rand = Date.now() + '-' + Math.random().toString(36).substring(7);
                     const serviceAccountString = Buffer.from(this.serviceAccount, 'base64').toString('ascii');
-                    const fileLocation = path.join(__dirname, '..', 'accounts');
-                    const filePath = path.join(fileLocation, `${rand}.json`);
+                    const fileLocation = path.join(__dirname, '..', 'accounts');                    
+                    const filePath = path.join(fileLocation, `googleAccount.json`);
     
                     if (!fs.existsSync(fileLocation)){
                         fs.mkdirSync(fileLocation);
@@ -181,22 +207,6 @@ class Engagement {
             try {
                 if (isAvro) {
                     resolve(stream.pipe(new avro.streams.BlockDecoder()))
-                    // stream
-                    // .on('error', (err) => {
-                    //     reject(err);
-                    // })
-                    // .pipe(new avro.streams.BlockDecoder())
-                    // .on('data', function (item) {                    
-                    //     jsonString += JSON.stringify(item) + ',';
-                    // })
-                    // .on('end', () => {
-                    //     //remove the last ',' adn add [] for creating an array
-                    //     jsonString = "[" + jsonString.slice(0, -1) + "]";
-                    //     resolve(JSON.parse(jsonString));
-                    // })
-                    // .on('error', (err) => {
-                    //     reject(err);
-                    // })
                 }
                 else {
                     stream
