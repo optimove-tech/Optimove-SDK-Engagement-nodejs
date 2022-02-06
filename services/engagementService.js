@@ -140,7 +140,15 @@ class Engagement {
 
     // Private methods
     _validateSettings(settings) {
-        if (!settings.serviceAccount) throw 'serviceAccount is mandatory';
+        if (settings.bucketName.includes('external')) {
+            this.mode = 'external'
+            if (!settings.decryptionKey) throw 'decryptionKey is mandatory';
+        }
+        else {
+            this.mode = 'internal';
+            if (!settings.serviceAccount) throw 'serviceAccount is mandatory';
+        }
+        
         if (!settings.tenantID) throw 'tenantID is manadatory';
         if (!settings.bucketName) throw 'buckerName is mandatory';
         if (!settings.customersFolderPath) throw 'customersFolderPath is mandatory';
@@ -151,20 +159,30 @@ class Engagement {
         return new Promise(async (resolve, reject) => {
             try {
                 if (!this.storage) {
-                    const serviceAccountString = Buffer.from(this.serviceAccount, 'base64').toString('ascii');
-                    const fileLocation = path.join(__dirname, '..', 'accounts');                    
-                    const filePath = path.join(fileLocation, `googleAccount.json`);
-    
-                    if (!fs.existsSync(fileLocation)){
-                        fs.mkdirSync(fileLocation);
-                    }                   
-
-                    fs.writeFile(filePath, serviceAccountString, async() => {
-                        this.serviceAccountFilePath = filePath;
+                    if (this.mode == 'internal') {
+                        const serviceAccountString = Buffer.from(this.serviceAccount, 'base64').toString('ascii');
+                        const fileLocation = path.join(__dirname, '..', 'accounts');                    
+                        const filePath = path.join(fileLocation, `googleAccount.json`);
         
-                        this.storage = await this._initStorage();
+                        if (!fs.existsSync(fileLocation)){
+                            fs.mkdirSync(fileLocation);
+                        }                   
+    
+                        fs.writeFile(filePath, serviceAccountString, () => {
+                            this.serviceAccountFilePath = filePath;
+            
+                            this.storage = new Storage({
+                                projectId: this.projectID,
+                                keyFilename: this.serviceAccountFilePath
+                            });
+
+                            resolve(this.storage);
+                        })
+                    }
+                    if (this.mode == 'external') {
+                        this.storage = new Storage();
                         resolve(this.storage);
-                    })
+                    }
                 }
                 else {
                     resolve(this.storage);
@@ -173,17 +191,6 @@ class Engagement {
             catch (err) {
                 reject(`_getStorage error - ${err}`);
             }
-        })
-    }
-
-    _initStorage() {
-        return new Promise((resolve, reject) => {
-            const storage = new Storage({
-                projectId: this.projectID,
-                keyFilename: this.serviceAccountFilePath
-            });
-
-            resolve(storage);
         })
     }
     
