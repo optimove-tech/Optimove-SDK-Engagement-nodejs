@@ -140,19 +140,19 @@ class Engagement {
 
     // Private methods
     _validateSettings(settings) {
-        if (settings.bucketName.includes('external')) {
-            this.mode = 'external'
-            if (!settings.decryptionKey) throw 'decryptionKey is mandatory';
-        }
-        else {
-            this.mode = 'internal';
-            if (!settings.serviceAccount) throw 'serviceAccount is mandatory';
-        }
-        
         if (!settings.tenantID) throw 'tenantID is manadatory';
         if (!settings.bucketName) throw 'buckerName is mandatory';
         if (!settings.customersFolderPath) throw 'customersFolderPath is mandatory';
         if (!settings.metadataFilePath) throw 'metadataFilePath is mandatory';
+
+        this.mode = settings.bucketName.includes('external') ? 'external' : 'internal';
+
+        if (this.mode == 'external') {
+            if (!settings.decryptionKey) throw 'decryptionKey is mandatory';
+        }
+        else {
+            if (!settings.serviceAccount) throw 'serviceAccount is mandatory';
+        }
     }
 
     _getStorage() {
