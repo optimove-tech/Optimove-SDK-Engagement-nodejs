@@ -1,10 +1,13 @@
 const avro = require('avro-js');
 const { Storage } = require('@google-cloud/storage');
+const path = require('path');
+const fs = require('fs');
 
 class Engagement {
     constructor(settings) {
         this._validateSettings(settings);
         
+        this.serviceAccount = settings.serviceAccount;
         this.decryptionKey = settings.decryptionKey;        
         this.metadataFileNamePrefix = 'metadata';        
         this.avroFileExtenssion = '.avro';
@@ -51,7 +54,9 @@ class Engagement {
                 bucketName: this.bucketName,
                 customersFolderPath: this.customersFolderPath,
                 metadataFilePath: this.metadataFilePath,
-                duration: json.Duration
+                duration: json.Duration,
+                internalAccountID: json.InternalAccountID,
+                accountName: json.AccountName
             }
 
             console.log('Metadata successfully received');
@@ -181,16 +186,42 @@ class Engagement {
         }
     }
 
-    _getStorage() {
-        return new Promise(async (resolve, reject) => {
-            try {
-                if (!this.storage)
-                    this.storage = new Storage();                    
+    async _getStorage() {
+        try {
+            let options = { timeout: 0 };
 
-                resolve(this.storage);
+            if (!this.storage) {
+                if (this.serviceAccount) {
+                    options.keyFilename = await this._readServiceAccount();
+                }
+
+                this.storage = new Storage(options);
+            }
+            
+            return this.storage;
+        }
+        catch (err) {
+            throw `_getStorage error - ${err}`;
+        }
+    }
+
+    async _readServiceAccount() {
+        return new Promise((resolve, reject) => {
+            try {
+                const serviceAccountString = Buffer.from(this.serviceAccount, 'base64').toString('ascii');
+                const fileLocation = path.join(__dirname, '..', 'accounts');                    
+                const filePath = path.join(fileLocation, `googleAccount.json`);
+
+                if (!fs.existsSync(fileLocation)){
+                    fs.mkdirSync(fileLocation);
+                }                   
+
+                fs.writeFile(filePath, serviceAccountString, async() => {
+                    resolve(filePath)
+                })
             }
             catch (err) {
-                reject(`_getStorage error - ${err}`);
+                reject(err);
             }
         })
     }
