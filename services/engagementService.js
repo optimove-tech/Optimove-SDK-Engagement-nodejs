@@ -129,16 +129,6 @@ class Engagement {
         }
     }
 
-    async _getGoogleWriteableStream(bucketName, filePath) {
-        try {                       
-            const _storage = this._getStorage();
-            return _storage.bucket(bucketName).file(filePath).createWriteStream();
-        }
-        catch (err) {
-            throw err.message;
-        }
-    }
-
     async uploadFile(stream, path) {
        return new Promise(async (resolve, reject) => {
             const _storage = this._getStorage();
@@ -288,6 +278,16 @@ class Engagement {
         }
         catch (err) {
             throw err;
+        }
+    }
+
+    async _getGoogleWriteableStream(bucketName, filePath) {
+        try {                       
+            const _storage = this._getStorage();
+            return _storage.bucket(bucketName).file(filePath).createWriteStream();
+        }
+        catch (err) {
+            throw err.message;
         }
     }
 }
