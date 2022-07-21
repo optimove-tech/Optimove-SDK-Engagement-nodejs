@@ -62,34 +62,6 @@ class Engagement {
         }
     }
 
-    // old 1
-    async getCustomersBatches() {       
-        try {
-            console.log(`getCustomersBatches started - for path: ${this.customersFolderPath}`)
-            const files = await this._getFiles(this.customersFolderPath);
-            console.log(`getCustomersBatches ended - for path: ${this.customersFolderPath}`)
-
-            console.log(`Fetched files: ${JSON.stringify(files)}`);
-
-            const batches = files.map((file) => {
-                // for testing file.id = 'customers%2abcd%2F123.json'
-                const index = file.id.lastIndexOf('%2F');
-    
-                return {
-                    name: file.name,
-                    id: file.id.substring(index + 1).split('2F')[1]
-                }
-            })
-
-            console.log(`Mapped files result: ${JSON.stringify(batches)}`);
-            return batches;
-        } 
-        catch (err) {
-            throw err.toString();
-        }
-    }
-
-    // new 1
     async getCustomersBatchesNumber() {
         try {
             if (this.customersBatches && this.customersBatches.length)
@@ -127,18 +99,6 @@ class Engagement {
         }
     }
 
-    // old 2
-    async getCustomersByBatch(batch) {
-        try {                
-            let fileStream = await this._getFileStream(batch, true);
-            return fileStream;    
-        }
-        catch (err) {
-            throw err.toString();
-        }
-    }
-
-    // new 2
     async getCustomersByBatchID(batchID) {
         try {
             const batchIndex = batchID-1;
