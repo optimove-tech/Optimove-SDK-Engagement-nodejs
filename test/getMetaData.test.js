@@ -3,20 +3,10 @@ const settings = require('../testConfiguration.json');
 const Engagement = require('../services/engagementService');
 
 describe('getMetaData', function() {
-    describe('getJson', function() {
-      it('should return json of campaign metaData', async function() {        
-        this.timeout(10000);
-        let json;
+  it('should return json of campaign metaData', async function() {
+    const engagement = new Engagement(settings);
+    const json = await engagement.getMetaData();      
 
-        try {
-          const engagement = new Engagement(settings);
-          json = await engagement.getMetaData();      
-        }
-        catch (err) {
-            json = err;
-        }
-
-        expect(json).be.an('object');
-      });
-    });
+    expect(json).be.an('object');
   });
+});

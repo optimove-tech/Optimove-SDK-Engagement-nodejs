@@ -1,12 +1,8 @@
 const avro = require('avro-js');
 const { Storage } = require('@google-cloud/storage');
-const path = require('path');
-const fs = require('fs');
-
 class Engagement {
     constructor(settings) {
-        this._validateSettings(settings);
-        
+        this._validateSettings(settings);        
         this.serviceAccount = settings.serviceAccount;
         this.decryptionKey = settings.decryptionKey;        
         this.metadataFileNamePrefix = 'metadata';        
@@ -14,9 +10,7 @@ class Engagement {
         this.tenantID = settings.tenantID;
         this.bucketName = settings.bucketName;
         this.customersFolderPath = settings.customersFolderPath;
-        this.metadataFilePath = settings.metadataFilePath;
-        this.envExt = process.env.NODE_ENV == 'production' ? 'us' : 'dev';
-        this.uploadBucketName = `optihub-campaigns-files-${this.envExt}`;
+        this.metadataFilePath = settings.metadataFilePath;        
         this.customersBatches;
     }    
 
@@ -71,7 +65,11 @@ class Engagement {
     // old 1
     async getCustomersBatches() {       
         try {
+            console.log(`getCustomersBatches started - for path: ${this.customersFolderPath}`)
             const files = await this._getFiles(this.customersFolderPath);
+            console.log(`getCustomersBatches ended - for path: ${this.customersFolderPath}`)
+
+            console.log(`Fetched files: ${JSON.stringify(files)}`);
 
             const batches = files.map((file) => {
                 // for testing file.id = 'customers%2abcd%2F123.json'
@@ -82,7 +80,8 @@ class Engagement {
                     id: file.id.substring(index + 1).split('2F')[1]
                 }
             })
-    
+
+            console.log(`Mapped files result: ${JSON.stringify(batches)}`);
             return batches;
         } 
         catch (err) {
@@ -116,6 +115,18 @@ class Engagement {
         }
     }
 
+    async getFileMetadata(fileName) {
+        try {
+            const uploadBucketName = this._getUploadBucketName();
+            const _storage = this._getStorage();
+            const [metadata] = await _storage.bucket(uploadBucketName).file(fileName).getMetadata();
+            return metadata;
+        }
+        catch (err) {
+            throw err.message;
+        }
+    }
+
     // old 2
     async getCustomersByBatch(batch) {
         try {                
@@ -145,11 +156,23 @@ class Engagement {
         }
     }
 
+    // For uploaded files
     async getCampaignFileStream(fileName) {
         try {            
-            const _storage = await this._getStorage();
-            const stream = await _storage.bucket(this.uploadBucketName).file(fileName).createReadStream();
+            const uploadBucketName = this._getUploadBucketName();
+            const _storage = this._getStorage();
+            const stream = _storage.bucket(uploadBucketName).file(fileName).createReadStream();
             return stream;
+        }
+        catch (err) {
+            throw err.message;
+        }
+    }
+
+    async _getGoogleWriteableStream(bucketName, filePath) {
+        try {                       
+            const _storage = this._getStorage();
+            return _storage.bucket(bucketName).file(filePath).createWriteStream();
         }
         catch (err) {
             throw err.message;
@@ -158,7 +181,7 @@ class Engagement {
 
     async uploadFile(stream, path) {
        return new Promise(async (resolve, reject) => {
-            const _storage = await this._getStorage();
+            const _storage = this._getStorage();
             const blobStream = _storage.bucket(this.uploadBucketName).file(path).createWriteStream();
 
             stream.pipe(blobStream)
@@ -173,6 +196,27 @@ class Engagement {
     }
 
     // Private methods
+    _getUploadBucketName() {
+        let uploadBucketName;
+
+        if (process.env.NODE_ENV == 'production') {
+            if (this.bucketName == 'optigration-internal-eu') {
+                uploadBucketName = 'optihub-campaigns-files-eu';
+            }
+            if (this.bucketName == 'optigration-internal-us') {
+                uploadBucketName = 'optihub-campaigns-files-us';
+            }
+            else {
+                throw `Bucket is not EU/US envirement, Bucket: ${this.bucketName}`;
+            }
+        }
+        else {
+            uploadBucketName = 'optihub-campaigns-files-dev';
+        }
+
+        return uploadBucketName;
+    }
+
     _validateSettings(settings) {
         if (!settings.tenantID) throw 'tenantID is manadatory';
         if (!settings.bucketName) throw 'buckerName is mandatory';
@@ -186,15 +230,11 @@ class Engagement {
         }
     }
 
-    async _getStorage() {
+    _getStorage() {
         try {
             let options = { timeout: 0 };
 
             if (!this.storage) {
-                if (this.serviceAccount) {
-                    options.keyFilename = await this._readServiceAccount();
-                }
-
                 this.storage = new Storage(options);
             }
             
@@ -203,27 +243,6 @@ class Engagement {
         catch (err) {
             throw `_getStorage error - ${err}`;
         }
-    }
-
-    async _readServiceAccount() {
-        return new Promise((resolve, reject) => {
-            try {
-                const serviceAccountString = Buffer.from(this.serviceAccount, 'base64').toString('ascii');
-                const fileLocation = path.join(__dirname, '..', 'accounts');                    
-                const filePath = path.join(fileLocation, `googleAccount.json`);
-
-                if (!fs.existsSync(fileLocation)){
-                    fs.mkdirSync(fileLocation);
-                }                   
-
-                fs.writeFile(filePath, serviceAccountString, async() => {
-                    resolve(filePath)
-                })
-            }
-            catch (err) {
-                reject(err);
-            }
-        })
     }
     
     async _getCustomersBatchFile(batchName) {
@@ -237,7 +256,7 @@ class Engagement {
     }
 
     _getFileStream(srcFileName, isAvro) {   
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             let stream;
             let jsonString = '';
             
@@ -246,17 +265,17 @@ class Engagement {
             };
             
             try {
-                const _storage = await this._getStorage();
+                const _storage = this._getStorage();
                 const secured = this.decryptionKey ? "secured" : "not secured";
                 const msg = `Downloading ${secured} file, bucket name: ${this.bucketName}, fileName: ${srcFileName}`;
 
                 console.log(`Started ${msg}`);
 
                 if (this.decryptionKey) {    
-                    stream = await _storage.bucket(this.bucketName).file(srcFileName).setEncryptionKey(Buffer.from(this.decryptionKey, 'base64')).createReadStream();
+                    stream = _storage.bucket(this.bucketName).file(srcFileName).setEncryptionKey(Buffer.from(this.decryptionKey, 'base64')).createReadStream();
                 }
                 else {
-                    stream = await _storage.bucket(this.bucketName).file(srcFileName).createReadStream();                    
+                    stream = _storage.bucket(this.bucketName).file(srcFileName).createReadStream();                    
                 }
                 console.log(`Done ${msg}`);
             }
@@ -266,9 +285,18 @@ class Engagement {
             }
     
             try {
+                // only customers files               
                 if (isAvro) {
-                    resolve(stream.pipe(new avro.streams.BlockDecoder()))
+                    const decoder = new avro.streams.BlockDecoder();
+                    const streamDecoded = stream.pipe(decoder);
+
+                    streamDecoded.on('error', (err) => {
+                        console.error(`streamDecoded error! ${JSON.stringify(err)}`);
+                    })
+                    
+                    resolve(streamDecoded);
                 }
+                //only metadata file
                 else {
                     stream
                     .on('error', (err) => {
@@ -290,7 +318,7 @@ class Engagement {
 
     async _getFiles(prefix, avroOnly = true) {
         try {
-            const _storage = await this._getStorage();
+            const _storage = this._getStorage();
             const options = { prefix };
 
             const [files] = await _storage.bucket(`${this.bucketName}`).getFiles(options);

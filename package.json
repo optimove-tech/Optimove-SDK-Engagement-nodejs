@@ -5,13 +5,13 @@
   "scripts": {
     "test": "mocha"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Optimove",
+  "license": "MIT",
   "dependencies": {
     "@google-cloud/storage": "^5.8.3",
     "avro-js": "^1.10.2",
-    "chai": "^4.3.4",
-    "mocha": "^8.3.2"
+    "chai": "^4.3.6",
+    "mocha": "^8.4.0"
   },
   "directories": {
     "test": "test"
