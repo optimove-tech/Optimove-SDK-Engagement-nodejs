@@ -3,7 +3,6 @@ const { Storage } = require('@google-cloud/storage');
 class Engagement {
     constructor(settings) {
         this._validateSettings(settings);        
-        this.serviceAccount = settings.serviceAccount;
         this.decryptionKey = settings.decryptionKey;        
         this.metadataFileNamePrefix = 'metadata';        
         this.avroFileExtenssion = '.avro';
@@ -87,18 +86,6 @@ class Engagement {
         }
     }
 
-    async getFileMetadata(fileName) {
-        try {
-            const uploadBucketName = this._getUploadBucketName();
-            const _storage = this._getStorage();
-            const [metadata] = await _storage.bucket(uploadBucketName).file(fileName).getMetadata();
-            return metadata;
-        }
-        catch (err) {
-            throw err.message;
-        }
-    }
-
     async getCustomersByBatchID(batchID) {
         try {
             const batchIndex = batchID-1;
@@ -116,19 +103,6 @@ class Engagement {
         }
     }
 
-    // For uploaded files
-    async getCampaignFileStream(fileName) {
-        try {            
-            const uploadBucketName = this._getUploadBucketName();
-            const _storage = this._getStorage();
-            const stream = _storage.bucket(uploadBucketName).file(fileName).createReadStream();
-            return stream;
-        }
-        catch (err) {
-            throw err.message;
-        }
-    }
-
     async uploadFile(stream, path) {
        return new Promise(async (resolve, reject) => {
             const _storage = this._getStorage();
@@ -143,28 +117,6 @@ class Engagement {
                 resolve();
             });
         })
-    }
-
-    // Private methods
-    _getUploadBucketName() {
-        let uploadBucketName;
-
-        if (process.env.NODE_ENV == 'production') {
-            if (this.bucketName == 'optigration-internal-eu') {
-                uploadBucketName = 'optihub-campaigns-files-eu';
-            }
-            if (this.bucketName == 'optigration-internal-us') {
-                uploadBucketName = 'optihub-campaigns-files-us';
-            }
-            else {
-                throw `Bucket is not EU/US envirement, Bucket: ${this.bucketName}`;
-            }
-        }
-        else {
-            uploadBucketName = 'optihub-campaigns-files-dev';
-        }
-
-        return uploadBucketName;
     }
 
     _validateSettings(settings) {
@@ -278,16 +230,6 @@ class Engagement {
         }
         catch (err) {
             throw err;
-        }
-    }
-
-    async _getGoogleWriteableStream(bucketName, filePath) {
-        try {                       
-            const _storage = this._getStorage();
-            return _storage.bucket(bucketName).file(filePath).createWriteStream();
-        }
-        catch (err) {
-            throw err.message;
         }
     }
 }
