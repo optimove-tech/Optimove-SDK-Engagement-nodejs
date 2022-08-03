@@ -75,7 +75,7 @@ async function run() {
     
     console.log('Getting all customers files content in paralel');
 
-    for (let index = 1; index < 3; index++) {
+    for (let index = 1; index < batchesNumber; index++) {
         const customersStream = await getCustomersByBatchID(index);
         readFile(customersStream, index);
     }
