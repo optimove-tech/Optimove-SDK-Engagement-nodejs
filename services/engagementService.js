@@ -120,6 +120,7 @@ class Engagement {
     }
 
     _validateSettings(settings) {
+        if (!settings || Object.keys(settings).length === 0) throw 'sdk settings are manadatory';
         if (!settings.tenantID) throw 'tenantID is manadatory';
         if (!settings.bucketName) throw 'buckerName is mandatory';
         if (!settings.customersFolderPath) throw 'customersFolderPath is mandatory';
