@@ -10,7 +10,9 @@
     * getCustomersByBatchID(batchID) - Returns a stream of customers for the batchID file number you passed
 
 ```javascript
-const EngagerSDK = require('optimove-sdk-engagement-nodejs')
+to install run: npm i @devops-optimove/optigration-sdk-js
+
+const EngagerSDK = require('https://www.npmjs.com/package/@devops-optimove/optigration-sdk-js')
 
 // Example of a webhook payload:
 {
