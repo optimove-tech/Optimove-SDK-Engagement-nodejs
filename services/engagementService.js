@@ -134,11 +134,9 @@ class Engagement {
     }
 
     _getStorage() {
-        try {
-            let options = { timeout: 0 };
-
+        try {            
             if (!this.storage) {
-                this.storage = new Storage(options);
+                this.storage = new Storage();
             }
             
             return this.storage;
@@ -191,10 +189,22 @@ class Engagement {
                 // only customers files               
                 if (isAvro) {
                     const decoder = new avro.streams.BlockDecoder();
+
+                    decoder.on('error', (err) => {
+                        console.error(`stream error!`);
+                        console.error(err);
+                    })    
+
+                    stream.on('error', (err) => {
+                        console.error(`stream error!`);
+                        console.error(err);
+                    })                    
+
                     const streamDecoded = stream.pipe(decoder);
 
                     streamDecoded.on('error', (err) => {
-                        console.error(`streamDecoded error! ${JSON.stringify(err)}`);
+                        console.error(`streamDecoded error!`);
+                        console.error(err);
                     })
                     
                     resolve(streamDecoded);
