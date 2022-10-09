@@ -21,9 +21,11 @@ const EngagerSDK = require('https://www.npmjs.com/package/@devops-optimove/optig
   CampaignID: 38085,
   EngagementID: 144523,
   TenantID: 28209,
-  BucketName: "optigration-internal-dev",
-  CustomersFolderPath: "2022-07-17 09 00 company-name 400 144523/customers",
-  MetadataFilePath: "2022-07-17 09 00 company-name 400 144523/metadata_144523"
+  BucketName: "optigration-extrnal-dev",
+  DecryptionKey: "your-decryption-key"
+  CustomersFolderPath: "2022-07-17 09 00 webhhok-name channel-id engagement-id/customers",
+  MetadataFilePath: "2022-07-17 09 00 webhhok-name channel-id  engagement-id/metadata_engagement-id",
+  ServiceAccount: ""
 }
 
 // Use the values you got from the webhook in your settings object
@@ -33,7 +35,8 @@ const settings = {
     tenantID: webhook.TenantID,
     bucketName: webhook.BucketName,            
     customersFolderPath: webhook.CustomersFolderPath,
-    metadataFilePath: webhook.MetadataFilePath
+    metadataFilePath: webhook.MetadataFilePath,
+    decryptionKey: webhhok.DecryptionKey
 }
 
 const engagerSDK = new EngagerSDK(settings);
@@ -50,7 +53,7 @@ const getMetaData = async () => {
 
 const getCustomersBatchesNumber = async () => {
   try {        
-        const batchesNumber = await engagerSDK.getCustomersBatchesNumber();       
+        const batchesNumber = await engagerSDK.getCustomersBatchesNumber();     
         return batchesNumber;
     }
     catch (err) {
