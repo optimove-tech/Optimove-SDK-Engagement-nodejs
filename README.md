@@ -22,7 +22,7 @@ const EngagerSDK = require('https://www.npmjs.com/package/@devops-optimove/optig
   EngagementID: 144523,
   TenantID: 28209,
   BucketName: "optigration-extrnal-dev",
-  DecryptionKey: "your-decryption-key"
+  DecryptionKey: "your-decryption-key",
   CustomersFolderPath: "2022-07-17 09 00 webhhok-name channel-id engagement-id/customers",
   MetadataFilePath: "2022-07-17 09 00 webhhok-name channel-id  engagement-id/metadata_engagement-id",
   ServiceAccount: ""
