@@ -59,43 +59,17 @@ class Engagement {
             console.error('Couldn\'t receive a metadata', err);
             throw err;
         }
-    }
-
-    async getCustomersBatchesNumber() {
-        try {
-            if (this.customersBatches && this.customersBatches.length)
-                return this.customersBatches.length;
-
-            const files = await this._getFiles(this.customersFolderPath);
-
-            const batches = files.map((file) => {
-                // for testing file.id = 'customers%2abcd%2F123.json'
-                const index = file.id.lastIndexOf('%2F');
-    
-                return {
-                    name: file.name,
-                    id: file.id.substring(index + 1).split('2F')[1]
-                }
-            })
-
-            this.customersBatches = batches;
-            return batches.length;
-        } 
-        catch (err) {
-            throw err.toString();
-        }
-    }
+    }   
 
     async getCustomersByBatchID(batchID) {
+        if (batchID < 10) {
+            batchID = `00${batchID}`;
+        } else if (batchID >= 10 && batchID < 100) {
+            batchID = `0${batchID}`;
+        }
         try {
-            const batchIndex = batchID-1;
-            if (typeof batchIndex == "undefined") throw 'BatchIndex is mandatory';
-            if (!this.customersBatches || !this.customersBatches.length) throw 'Call the method getCustomersBatchesNumber before calling this method';
-
-            const batchObj = this.customersBatches[batchIndex];
-            if (!batchObj) throw `Customers file with index number ${batchIndex} does not exist`;
-
-            let fileStream = await this._getFileStream(batchObj.name, true);
+            const fileName = `${this.customersFolderPath}/customers_file${batchID}.deflate.avro`
+            let fileStream = await this._getFileStream(fileName, true);
             return fileStream;    
         }
         catch (err) {
@@ -176,7 +150,8 @@ class Engagement {
                     stream = _storage.bucket(this.bucketName).file(srcFileName).setEncryptionKey(Buffer.from(this.decryptionKey, 'base64')).createReadStream();
                 }
                 else {
-                    stream = _storage.bucket(this.bucketName).file(srcFileName).createReadStream();                    
+                    stream = _storage.bucket(this.bucketName).file(srcFileName).createReadStream();  
+                                 
                 }
                 console.log(`Done ${msg}`);
             }
