@@ -61,14 +61,15 @@ class Engagement {
         }
     }   
 
-    async getCustomersByBatchID(batchID) {
+    async getCustomersByBatchID(batchID) {     
         if (batchID < 10) {
             batchID = `00${batchID}`;
         } else if (batchID >= 10 && batchID < 100) {
             batchID = `0${batchID}`;
         }
+        
         try {
-            const fileName = `${this.customersFolderPath}/customers_file${batchID}.deflate.avro`
+            const fileName = `${this.customersFolderPath}/customers_file${batchID}.deflate.avro`;
             let fileStream = await this._getFileStream(fileName, true);
             return fileStream;    
         }
