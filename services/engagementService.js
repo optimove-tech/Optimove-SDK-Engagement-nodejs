@@ -67,7 +67,6 @@ class Engagement {
         } else if (batchID >= 10 && batchID < 100) {
             batchID = `0${batchID}`;
         }
-        
         try {
             const fileName = `${this.customersFolderPath}/customers_file${batchID}.deflate.avro`;
             let fileStream = await this._getFileStream(fileName, true);
