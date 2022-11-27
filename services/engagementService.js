@@ -16,13 +16,7 @@ class Engagement {
     // Public methods
     async getMetaData() {
         try {
-            const filesInfo = await this._getFiles(this.metadataFilePath, false);
-
-            if (!filesInfo || !filesInfo.length)
-                throw `Metadata for folder ${this.metadataFilePath} does not exist`;
-
-            let fileStream = filesInfo.find(file => file.name.includes(this.metadataFileNamePrefix));
-            let json = await this._getFileStream(fileStream.name, false);
+            let json = await this._getFileStream(this.metadataFilePath, false);
 
             if (!json)
                 throw new Error('metadata is empty or does not exist');
@@ -64,7 +58,8 @@ class Engagement {
     async getCustomersByBatchID(batchID) {     
         if (batchID < 10) {
             batchID = `00${batchID}`;
-        } else if (batchID >= 10 && batchID < 100) {
+        }
+        else if (batchID >= 10 && batchID < 100) {
             batchID = `0${batchID}`;
         }
         try {
@@ -75,22 +70,6 @@ class Engagement {
         catch (err) {
             throw err.toString();
         }
-    }
-
-    async uploadFile(stream, path) {
-       return new Promise(async (resolve, reject) => {
-            const _storage = this._getStorage();
-            const blobStream = _storage.bucket(this.uploadBucketName).file(path).createWriteStream();
-
-            stream.pipe(blobStream)
-            .on('error', function(err) {
-                console.log(err);
-                reject(err);
-            })
-            .on('finish', function() {
-                resolve();
-            });
-        })
     }
 
     _validateSettings(settings) {
@@ -150,8 +129,7 @@ class Engagement {
                     stream = _storage.bucket(this.bucketName).file(srcFileName).setEncryptionKey(Buffer.from(this.decryptionKey, 'base64')).createReadStream();
                 }
                 else {
-                    stream = _storage.bucket(this.bucketName).file(srcFileName).createReadStream();  
-                                 
+                    stream = _storage.bucket(this.bucketName).file(srcFileName).createReadStream();                                 
                 }
                 console.log(`Done ${msg}`);
             }
@@ -202,21 +180,6 @@ class Engagement {
                 reject(err);
             }
         })    
-    }
-
-    async _getFiles(prefix, avroOnly = true) {
-        try {
-            const _storage = this._getStorage();
-            const options = { prefix };
-
-            const [files] = await _storage.bucket(`${this.bucketName}`).getFiles(options);
-            const fileInfo = avroOnly? files.filter(file => file.name.includes(this.avroFileExtenssion)): files;
-
-            return fileInfo;
-        }
-        catch (err) {
-            throw err;
-        }
     }
 }
 
