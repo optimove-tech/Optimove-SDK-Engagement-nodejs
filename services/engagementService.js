@@ -16,13 +16,7 @@ class Engagement {
     // Public methods
     async getMetaData() {
         try {
-            const filesInfo = await this._getFiles(this.metadataFilePath, false);
-
-            if (!filesInfo || !filesInfo.length)
-                throw `Metadata for folder ${this.metadataFilePath} does not exist`;
-
-            let fileStream = filesInfo.find(file => file.name.includes(this.metadataFileNamePrefix));
-            let json = await this._getFileStream(fileStream.name, false);
+            let json = await this._getFileStream(this.metadataFilePath, false);
 
             if (!json)
                 throw new Error('metadata is empty or does not exist');
@@ -59,43 +53,21 @@ class Engagement {
             console.error('Couldn\'t receive a metadata', err);
             throw err;
         }
-    }
+    }   
 
-    async getCustomersBatchesNumber() {
-        try {
-            if (this.customersBatches && this.customersBatches.length)
-                return this.customersBatches.length;
+    async getCustomersByBatchID(batchID) {  
+        if (!batchID || isNaN(batchID) || batchID < 0)
+            throw `batchID: ${batchID} is not valid.`;
 
-            const files = await this._getFiles(this.customersFolderPath);
-
-            const batches = files.map((file) => {
-                // for testing file.id = 'customers%2abcd%2F123.json'
-                const index = file.id.lastIndexOf('%2F');
-    
-                return {
-                    name: file.name,
-                    id: file.id.substring(index + 1).split('2F')[1]
-                }
-            })
-
-            this.customersBatches = batches;
-            return batches.length;
-        } 
-        catch (err) {
-            throw err.toString();
+        if (batchID < 10) {
+            batchID = `00${batchID}`;
         }
-    }
-
-    async getCustomersByBatchID(batchID) {
+        else if (batchID >= 10 && batchID < 100) {
+            batchID = `0${batchID}`;
+        }
         try {
-            const batchIndex = batchID-1;
-            if (typeof batchIndex == "undefined") throw 'BatchIndex is mandatory';
-            if (!this.customersBatches || !this.customersBatches.length) throw 'Call the method getCustomersBatchesNumber before calling this method';
-
-            const batchObj = this.customersBatches[batchIndex];
-            if (!batchObj) throw `Customers file with index number ${batchIndex} does not exist`;
-
-            let fileStream = await this._getFileStream(batchObj.name, true);
+            const fileName = `${this.customersFolderPath}/customers_file${batchID}.deflate.avro`;
+            let fileStream = await this._getFileStream(fileName, true);
             return fileStream;    
         }
         catch (err) {
@@ -103,26 +75,10 @@ class Engagement {
         }
     }
 
-    async uploadFile(stream, path) {
-       return new Promise(async (resolve, reject) => {
-            const _storage = this._getStorage();
-            const blobStream = _storage.bucket(this.uploadBucketName).file(path).createWriteStream();
-
-            stream.pipe(blobStream)
-            .on('error', function(err) {
-                console.log(err);
-                reject(err);
-            })
-            .on('finish', function() {
-                resolve();
-            });
-        })
-    }
-
     _validateSettings(settings) {
         if (!settings || Object.keys(settings).length === 0) throw 'sdk settings are manadatory';
         if (!settings.tenantID) throw 'tenantID is manadatory';
-        if (!settings.bucketName) throw 'buckerName is mandatory';
+        if (!settings.bucketName) throw 'bucketName is mandatory';
         if (!settings.customersFolderPath) throw 'customersFolderPath is mandatory';
         if (!settings.metadataFilePath) throw 'metadataFilePath is mandatory';
 
@@ -143,16 +99,6 @@ class Engagement {
         }
         catch (err) {
             throw `_getStorage error - ${err}`;
-        }
-    }
-    
-    async _getCustomersBatchFile(batchName) {
-        try {
-            const file = await this._getFiles(batchName);
-            return file[0];
-        }
-        catch (err) {
-            throw err;
         }
     }
 
@@ -176,7 +122,7 @@ class Engagement {
                     stream = _storage.bucket(this.bucketName).file(srcFileName).setEncryptionKey(Buffer.from(this.decryptionKey, 'base64')).createReadStream();
                 }
                 else {
-                    stream = _storage.bucket(this.bucketName).file(srcFileName).createReadStream();                    
+                    stream = _storage.bucket(this.bucketName).file(srcFileName).createReadStream();                                 
                 }
                 console.log(`Done ${msg}`);
             }
@@ -227,21 +173,6 @@ class Engagement {
                 reject(err);
             }
         })    
-    }
-
-    async _getFiles(prefix, avroOnly = true) {
-        try {
-            const _storage = this._getStorage();
-            const options = { prefix };
-
-            const [files] = await _storage.bucket(`${this.bucketName}`).getFiles(options);
-            const fileInfo = avroOnly? files.filter(file => file.name.includes(this.avroFileExtenssion)): files;
-
-            return fileInfo;
-        }
-        catch (err) {
-            throw err;
-        }
     }
 }
 
