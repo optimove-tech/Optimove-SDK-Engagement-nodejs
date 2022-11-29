@@ -56,9 +56,8 @@ class Engagement {
     }   
 
     async getCustomersByBatchID(batchID) {  
-
         if (!batchID || isNaN(batchID) || batchID < 0)
-            throw `File for batch id ${batchID} doens't exist`;
+            throw `batchID: ${batchID} is not valid.`;
 
         if (batchID < 10) {
             batchID = `00${batchID}`;
@@ -100,16 +99,6 @@ class Engagement {
         }
         catch (err) {
             throw `_getStorage error - ${err}`;
-        }
-    }
-    
-    async _getCustomersBatchFile(batchName) {
-        try {
-            const file = await this._getFiles(batchName);
-            return file[0];
-        }
-        catch (err) {
-            throw err;
         }
     }
 

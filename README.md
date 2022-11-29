@@ -11,16 +11,16 @@
 
 | Error Message | Explanation |
 | --- | --- |
-| 'metadata is empty or does not exist'. | Metadata issues. Please, check your settings object and "metadataFilePath" field, especially. |
-| 'Couldn't receive a metadata'.| Something wrong with creating metadata object. |
-| 'File for batch id batchIDNumber doens't exist'.| Wrong BatchIDNumber was provided for getCustomersByBatchID function. |
-| 'sdk settings are manadatory'.| No SDK settings object or it has no keys. |
-| 'tenantID is manadatory'.| No tenantID field in the setting object |
-| 'bucketName is mandatory'.| No bucketName field in the setting object |
-| 'customersFolderPath is mandatory'.| No customersFolderPath field in the setting object |
-| 'metadataFilePath is mandatory'.| No metadataFilePath field in the setting object |
-| 'decryptionKey is mandatory'.| No decryptionKey field in the setting object |
-| '_getStorage error - error details'.| Google Cloud issue. Contact Optimove if the issue repeats. |
+| metadata is empty or does not exist. | Metadata issues. Please, check your settings object and "metadataFilePath" field, especially. |
+| Couldn't receive a metadata.| Something wrong with creating metadata object. |
+| batchID: ${batchID} is not valid. | Wrong BatchIDNumber was provided for getCustomersByBatchID function. |
+| sdk settings are manadatory.| No SDK settings object or it has no keys. |
+| tenantID is manadatory.| No tenantID field in the setting object |
+| bucketName is mandatory.| No bucketName field in the setting object |
+| customersFolderPath is mandatory.| No customersFolderPath field in the setting object |
+| metadataFilePath is mandatory.| No metadataFilePath field in the setting object |
+| decryptionKey is mandatory.| No decryptionKey field in the setting object |
+| _getStorage error - error details. | Google Cloud issue. Contact Optimove if the issue repeats. |
 
 
 ```javascript
