@@ -55,7 +55,11 @@ class Engagement {
         }
     }   
 
-    async getCustomersByBatchID(batchID) {     
+    async getCustomersByBatchID(batchID) {  
+
+        if (!batchID || isNaN(batchID) || batchID < 0)
+            throw `File for batch id ${batchID} doens't exist`;
+
         if (batchID < 10) {
             batchID = `00${batchID}`;
         }
