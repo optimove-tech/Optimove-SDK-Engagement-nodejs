@@ -6,8 +6,22 @@
 2. Use the webhook values you got and create an instance of the engagement SDK
 3. You can use one of the three public methods the SDK has
     * getMetaData() - Returns a json of the campaign's metadata
-    * getCustomersBatchesNumber() - Returns the amount of batches (files) for the campaign
     * getCustomersByBatchID(batchID) - Returns a stream of customers for the batchID file number you passed
+
+
+| Error Message | Explanation |
+| --- | --- |
+| 'metadata is empty or does not exist'. | Metadata issues. Please, check your settings object and "metadataFilePath" field, especially. |
+| 'Couldn't receive a metadata'.| Something wrong with creating metadata object. |
+| 'File for batch id batchIDNumber doens't exist'.| Wrong BatchIDNumber was provided for getCustomersByBatchID function. |
+| 'sdk settings are manadatory'.| No SDK settings object or it has no keys. |
+| 'tenantID is manadatory'.| No tenantID field in the setting object |
+| 'bucketName is mandatory'.| No bucketName field in the setting object |
+| 'customersFolderPath is mandatory'.| No customersFolderPath field in the setting object |
+| 'metadataFilePath is mandatory'.| No metadataFilePath field in the setting object |
+| 'decryptionKey is mandatory'.| No decryptionKey field in the setting object |
+| '_getStorage error - error details'.| Google cloud issue. Contact Optimove if the issue repeats. |
+
 
 ```javascript
 to install run: npm i @devops-optimove/optigration-sdk-js
@@ -45,16 +59,6 @@ const getMetaData = async () => {
      try {
         const metaData = await engagerSDK.getMetaData();
         return metaData;
-    }
-    catch (err) {
-        console.log(err);
-    }
-}
-
-const getCustomersBatchesNumber = async () => {
-  try {        
-        const batchesNumber = await engagerSDK.getCustomersBatchesNumber();     
-        return batchesNumber;
     }
     catch (err) {
         console.log(err);
