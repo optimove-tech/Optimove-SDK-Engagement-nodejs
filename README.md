@@ -20,7 +20,7 @@
 | 'customersFolderPath is mandatory'.| No customersFolderPath field in the setting object |
 | 'metadataFilePath is mandatory'.| No metadataFilePath field in the setting object |
 | 'decryptionKey is mandatory'.| No decryptionKey field in the setting object |
-| '_getStorage error - error details'.| Google cloud issue. Contact Optimove if the issue repeats. |
+| '_getStorage error - error details'.| Google Cloud issue. Contact Optimove if the issue repeats. |
 
 
 ```javascript
