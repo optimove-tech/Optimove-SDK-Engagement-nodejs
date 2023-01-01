@@ -108,7 +108,6 @@ class Engagement {
         return new Promise((resolve, reject) => {
             let stream;
             let jsonString = '';
-            let encoding = null;
             
             const options = {
                 // destination: destFileName
