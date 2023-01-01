@@ -164,13 +164,8 @@ class Engagement {
                     .on('error', (err) => {
                         reject(err);
                     })
-                    .on('data', (item) => {                   
-                        if (!encoding) {
-                            const isUtf16 = this._checkForUtf16Symbols(item);
-                            encoding = isUtf16 ? 'utf16le' : 'utf8';
-                        }
-
-                        jsonString += item.toString(encoding);
+                    .on('data', (item) => {
+                        jsonString += item.toString('latin1');
                     })
                     .on('end', () => {
                         try {
@@ -188,29 +183,6 @@ class Engagement {
                 reject(err);
             }
         })    
-    }
-
-    _checkForUtf16Symbols(item) {
-        return item.includes('\u0000') || 
-            item.includes('\u0001') ||
-            item.includes('\u0002') ||
-            item.includes('\u0003') ||
-            item.includes('\u0004') || 
-            item.includes('\u0005') ||
-            item.includes('\u0006') ||
-            item.includes('\u0007') ||
-            item.includes('\u0008') ||
-            item.includes('\u0009') ||
-            item.includes('\u0010') ||
-            item.includes('\u0011') ||
-            item.includes('\u0012') ||
-            item.includes('\u0013') ||           
-            item.includes('\u0014') ||
-            item.includes('\u0015') ||
-            item.includes('\u0016') ||
-            item.includes('\u0017') ||
-            item.includes('\u0018') ||
-            item.includes('\u0019');
     }
 }
 
