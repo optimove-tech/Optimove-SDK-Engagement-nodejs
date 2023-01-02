@@ -11,12 +11,13 @@ class Engagement {
         this.customersFolderPath = settings.customersFolderPath;
         this.metadataFilePath = settings.metadataFilePath;        
         this.customersBatches;
+        this.metadataEncoding = 'latin1';
     }    
 
     // Public methods
     async getMetaData() {
         try {
-            let json = await this._getFileStream(this.metadataFilePath, false);
+            let json = await this._getMetadataStream(this.metadataFilePath);
 
             if (!json)
                 throw new Error('metadata is empty or does not exist');
@@ -69,7 +70,7 @@ class Engagement {
         }
         try {
             const fileName = `${this.customersFolderPath}/customers_file${batchID}.deflate.avro`;
-            let fileStream = await this._getFileStream(fileName, true);
+            let fileStream = await this._getCustomersFileStream(fileName);
             return fileStream;    
         }
         catch (err) {
@@ -77,6 +78,7 @@ class Engagement {
         }
     }
 
+    // Private methods
     _validateSettings(settings) {
         if (!settings || Object.keys(settings).length === 0) throw 'sdk settings are manadatory';
         if (!settings.tenantID) throw 'tenantID is manadatory';
@@ -104,77 +106,31 @@ class Engagement {
         }
     }
 
-    _getFileStream(srcFileName, isAvro) {   
+    _getCustomersFileStream(srcFileName) {   
         return new Promise((resolve, reject) => {
-            let stream;
-            let jsonString = '';
-            
-            const options = {
-                // destination: destFileName
-            };
-            
-            try {
-                const _storage = this._getStorage();
-                const secured = this.decryptionKey ? "secured" : "not secured";
-                const msg = `Downloading ${secured} file, bucket name: ${this.bucketName}, fileName: ${srcFileName}`;
-
-                console.log(`Started ${msg}`);
-
-                if (this.decryptionKey) {    
-                    stream = _storage.bucket(this.bucketName).file(srcFileName).setEncryptionKey(Buffer.from(this.decryptionKey, 'base64')).createReadStream();
-                }
-                else {
-                    stream = _storage.bucket(this.bucketName).file(srcFileName).createReadStream();                                 
-                }
-                console.log(`Done ${msg}`);
-            }
-            catch (err) {
-                console.error('Error downloading file', err);
-                reject(err);
-            }
+            const stream = this._downloadFileStream(srcFileName);
     
             try {
-                // only customers files               
-                if (isAvro) {
-                    const decoder = new avro.streams.BlockDecoder();
+                const decoder = new avro.streams.BlockDecoder();
 
-                    decoder.on('error', (err) => {
-                        console.error(`stream error!`);
-                        console.error(err);
-                    })    
+                decoder.on('error', (err) => {
+                    console.error(`stream error!`);
+                    console.error(err);
+                })    
 
-                    stream.on('error', (err) => {
-                        console.error(`stream error!`);
-                        console.error(err);
-                    })                    
+                stream.on('error', (err) => {
+                    console.error(`stream error!`);
+                    console.error(err);
+                })                    
 
-                    const streamDecoded = stream.pipe(decoder);
+                const streamDecoded = stream.pipe(decoder);
 
-                    streamDecoded.on('error', (err) => {
-                        console.error(`streamDecoded error!`);
-                        console.error(err);
-                    })
-                    
-                    resolve(streamDecoded);
-                }
-                //only metadata file
-                else {
-                    stream
-                    .on('error', (err) => {
-                        reject(err);
-                    })
-                    .on('data', (item) => {
-                        jsonString += item.toString('latin1');
-                    })
-                    .on('end', () => {
-                        try {
-                            resolve(JSON.parse(jsonString));
-                        } 
-                        catch (error) {
-                            reject(error);
-                        }
-                    })
-                }
+                streamDecoded.on('error', (err) => {
+                    console.error(`streamDecoded error!`);
+                    console.error(err);
+                })
+                
+                resolve(streamDecoded);
             }
             catch(err) {
                 console.error(`pipe error`);
@@ -182,6 +138,54 @@ class Engagement {
                 reject(err);
             }
         })    
+    }
+
+    _getMetadataStream(srcFileName) {
+        return new Promise((resolve, reject) => {
+            let jsonString = '';
+            const stream = this._downloadFileStream(srcFileName);
+
+            stream
+            .on('error', (err) => {
+                reject(err);
+            })
+            .on('data', (item) => {
+                jsonString += item.toString(this.metadataEncoding);
+            })
+            .on('end', () => {
+                try {
+                    resolve(JSON.parse(jsonString));
+                } 
+                catch (error) {
+                    reject(error);
+                }
+            })
+        })
+    }
+
+    _downloadFileStream(srcFileName) {
+        let stream;
+        
+        try {
+            const _storage = this._getStorage();
+            const secured = this.decryptionKey ? "secured" : "not secured";
+            const msg = `Downloading ${secured} file, bucket name: ${this.bucketName}, fileName: ${srcFileName}`;
+
+            console.log(`Started ${msg}`);
+
+            if (this.decryptionKey) {    
+                stream = _storage.bucket(this.bucketName).file(srcFileName).setEncryptionKey(Buffer.from(this.decryptionKey, 'base64')).createReadStream();
+            }
+            else {
+                stream = _storage.bucket(this.bucketName).file(srcFileName).createReadStream();                                 
+            }
+            console.log(`Done ${msg}`);
+        }
+        catch (err) {            
+            reject(err);
+        }
+
+        return stream;
     }
 }
 
