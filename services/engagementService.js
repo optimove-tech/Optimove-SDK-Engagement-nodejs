@@ -11,7 +11,7 @@ class Engagement {
         this.customersFolderPath = settings.customersFolderPath;
         this.metadataFilePath = settings.metadataFilePath;        
         this.customersBatches;
-        this.metadataEncoding = 'latin1';
+        this.metadataEncoding = 'utf8';
     }    
 
     // Public methods
