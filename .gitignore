@@ -4,3 +4,4 @@ gcs/*
 testConfiguration.json
 accounts/*
 files/
+test.js
