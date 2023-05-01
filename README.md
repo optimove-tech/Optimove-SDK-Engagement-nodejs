@@ -79,13 +79,8 @@ async function run() {
     const campaignMetadata = await getMetaData();
     console.log(`Campaign metadata ${JSON.stringify(campaignMetadata)}`)
 
-    const batchesNumber = await getCustomersBatchesNumber();
-    console.log(`Total customers files found in google cloud: ${batchesNumber}`);
-    
-    console.log('Getting all customers files content in paralel');
-
-    for (let index = 1; index < batchesNumber; index++) {
-        const customersStream = await getCustomersByBatchID(index);
+    for (let index = 1; index < campaignMetadata.numberOfFiles; index++) {
+        const customersStream = getCustomersByBatchID(index);
         readFile(customersStream, index);
     }
 }
