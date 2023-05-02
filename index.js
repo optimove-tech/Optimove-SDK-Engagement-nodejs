@@ -10,7 +10,7 @@ class Engagement {
         this.customersFolderPath = settings.customersFolderPath;
         this.metadataFilePath = settings.metadataFilePath;
         this.storage;
-        this.metadataEncoding = 'utf8';      
+        this.metadataEncoding = 'utf8';
     }    
 
     // Public methods
@@ -59,7 +59,7 @@ class Engagement {
 
     getCustomersByBatchID(batchID) {  
         if (!batchID || isNaN(batchID) || batchID < 0)
-            throw `batchID: ${batchID} is not valid.`;
+            throw `batchID: ${batchID} is not valid`;
 
         if (batchID < 10) {
             batchID = `00${batchID}`;
@@ -67,6 +67,7 @@ class Engagement {
         else if (batchID >= 10 && batchID < 100) {
             batchID = `0${batchID}`;
         }
+        
         try {
             const fileName = `${this.customersFolderPath}/customers_file${batchID}.deflate.avro`;
             return this._getCustomersFileStream(fileName);            
