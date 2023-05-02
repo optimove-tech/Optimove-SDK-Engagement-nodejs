@@ -5,14 +5,12 @@ class Engagement {
     constructor(settings) {
         this._validateSettings(settings);
         this.decryptionKey = settings.decryptionKey;
-        this.metadataFileNamePrefix = 'metadata';
-        this.avroFileExtenssion = '.avro';
         this.tenantID = settings.tenantID;
         this.bucketName = settings.bucketName;
         this.customersFolderPath = settings.customersFolderPath;
         this.metadataFilePath = settings.metadataFilePath;
-        this.customersBatches;
-        this.metadataEncoding = 'utf8';        
+        this.storage;
+        this.metadataEncoding = 'utf8';      
     }    
 
     // Public methods
@@ -86,11 +84,10 @@ class Engagement {
         if (!settings.customersFolderPath) throw 'customersFolderPath is mandatory';
         if (!settings.metadataFilePath) throw 'metadataFilePath is mandatory';
 
-        this.mode = settings.bucketName.includes('external') ? 'external' : 'internal';
+        const bucketMode = settings.bucketName.includes('external') ? 'external' : 'internal';
 
-        if (this.mode == 'external') {
-            if (!settings.decryptionKey) throw 'decryptionKey is mandatory';
-        }
+        if (bucketMode == 'external' && !settings.decryptionKey)
+            throw 'decryptionKey is mandatory';        
     }
 
     _getStorage() {
