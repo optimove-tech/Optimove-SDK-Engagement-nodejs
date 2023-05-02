@@ -67,7 +67,7 @@ const getMetaData = async () => {
 
 const getCustomersByBatchID = async (batchID) => {
     try {        
-        const customersStream = await engagerSDK.getCustomersByBatchID(batchID);
+        const customersStream = engagerSDK.getCustomersByBatchID(batchID);
         return customersStream;
     }
     catch (err) {
