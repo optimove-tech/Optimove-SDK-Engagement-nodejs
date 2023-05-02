@@ -67,7 +67,7 @@ class Engagement {
         else if (batchID >= 10 && batchID < 100) {
             batchID = `0${batchID}`;
         }
-        
+
         try {
             const fileName = `${this.customersFolderPath}/customers_file${batchID}.deflate.avro`;
             return this._getCustomersFileStream(fileName);            
@@ -92,6 +92,7 @@ class Engagement {
     }
 
     _getStorage() {
+        // singleton to reduce the amount of storage objects creation
         try {            
             if (!this.storage) {
                 this.storage = new Storage();
