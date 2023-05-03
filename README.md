@@ -65,7 +65,7 @@ const getMetaData = async () => {
     }
 }
 
-const getCustomersByBatchID = async (batchID) => {
+const getCustomersByBatchID = (batchID) => {
     try {        
         const customersStream = engagerSDK.getCustomersByBatchID(batchID);
         return customersStream;

@@ -5,14 +5,12 @@ class Engagement {
     constructor(settings) {
         this._validateSettings(settings);
         this.decryptionKey = settings.decryptionKey;
-        this.metadataFileNamePrefix = 'metadata';
-        this.avroFileExtenssion = '.avro';
         this.tenantID = settings.tenantID;
         this.bucketName = settings.bucketName;
         this.customersFolderPath = settings.customersFolderPath;
         this.metadataFilePath = settings.metadataFilePath;
-        this.customersBatches;
-        this.metadataEncoding = 'utf8';        
+        this.storage;
+        this.metadataEncoding = 'utf8';
     }    
 
     // Public methods
@@ -61,7 +59,7 @@ class Engagement {
 
     getCustomersByBatchID(batchID) {  
         if (!batchID || isNaN(batchID) || batchID < 0)
-            throw `batchID: ${batchID} is not valid.`;
+            throw `batchID: ${batchID} is not valid`;
 
         if (batchID < 10) {
             batchID = `00${batchID}`;
@@ -69,6 +67,7 @@ class Engagement {
         else if (batchID >= 10 && batchID < 100) {
             batchID = `0${batchID}`;
         }
+
         try {
             const fileName = `${this.customersFolderPath}/customers_file${batchID}.deflate.avro`;
             return this._getCustomersFileStream(fileName);            
@@ -86,14 +85,14 @@ class Engagement {
         if (!settings.customersFolderPath) throw 'customersFolderPath is mandatory';
         if (!settings.metadataFilePath) throw 'metadataFilePath is mandatory';
 
-        this.mode = settings.bucketName.includes('external') ? 'external' : 'internal';
+        const bucketMode = settings.bucketName.includes('external') ? 'external' : 'internal';
 
-        if (this.mode == 'external') {
-            if (!settings.decryptionKey) throw 'decryptionKey is mandatory';
-        }
+        if (bucketMode == 'external' && !settings.decryptionKey)
+            throw 'decryptionKey is mandatory';        
     }
 
     _getStorage() {
+        // singleton to reduce the amount of storage objects creation
         try {            
             if (!this.storage) {
                 this.storage = new Storage();
