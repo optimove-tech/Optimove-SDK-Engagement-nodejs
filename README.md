@@ -36,10 +36,10 @@ const EngagerSDK = require('https://www.npmjs.com/package/@devops-optimove/optig
   EngagementID: 144523,
   TenantID: 28209,
   BucketName: "optigration-external-eu",
-  DecryptionKey: "your-decryption-key",
   CustomersFolderPath: "2022-07-19 09 00 webhhook-name channel-id engagement-id/customers",
   MetadataFilePath: "2022-07-19 09 00 webhhook-name channel-id  engagement-id/metadata_engagement-id",
-  ServiceAccount: ""
+  DecryptionKey: "your-decryption-key",
+  ChannelID: 1
 }
 
 // Use the values you got from the webhook in your settings object
