@@ -95,7 +95,7 @@ class Engagement {
         // singleton to reduce the amount of storage objects creation
         try {            
             if (!this.storage) {
-                this.storage = new Storage();
+                this.storage = new Storage({projectId: 'optimoveSDK'});
             }
             
             return this.storage;
