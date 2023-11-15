@@ -4,7 +4,7 @@
 
 1. Get a webhook from optimove
 2. Use the webhook values you got and create an instance of the engagement SDK
-3. You can use one of the three public methods the SDK has
+3. You can use one of the public methods the SDK has
     * getMetaData() - Returns a json of the campaign's metadata
     * getCustomersByBatchID(batchID) - Returns a stream of customers for the batchID file number you passed
 
