@@ -48,6 +48,23 @@ class Engagement {
                 tags: json.Tags
             }
 
+            if (json.channelID === 472 && parseInt(this.tenantID) === 1255) {
+                const url = this._getTemplatesUrl();
+
+                try {
+                    const res = await fetch(`${url}/getTemplateHash?channelID=472&tenantID=1255&oTemplateID=${json.templateID}`);
+                    const jsonRes = await res.json();
+
+                    if (jsonRes.error) {
+                        console.log(jsonRes.error);
+                    } else {
+                        json.entryID = jsonRes.templateHash;
+                    }
+                } catch (err) {
+                    console.log(err)
+                }
+            }
+
             console.log('Metadata successfully received');
             return json;
         }
@@ -75,6 +92,10 @@ class Engagement {
         catch (err) {
             throw err.toString();
         }
+    }
+
+    _getTemplatesUrl() {
+        return this.bucketName == 'optigration-internal-dev' ? 'http://optihub-templates-dev.optimove.net' : 'http://optihub-templates-prod.optimove.net';
     }
 
     // Private methods
