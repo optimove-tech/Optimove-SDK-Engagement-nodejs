@@ -1,5 +1,6 @@
 const avro = require('avro-js');
 const { Storage } = require('@google-cloud/storage');
+const JSONbig = require('json-bigint');
 
 class Engagement {
     constructor(settings) {
