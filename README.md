@@ -42,7 +42,7 @@ const EngagerSDK = require('https://www.npmjs.com/package/@devops-optimove/optig
   ChannelID: 1
 }
 
-// Use the values you got from the webhook in your settings object
+// Use the values you got from the webhook in your settings object!
 const settings = {    
     campaignID: webhook.CampaignID,
     engagementID: webhook.EngagementID,
