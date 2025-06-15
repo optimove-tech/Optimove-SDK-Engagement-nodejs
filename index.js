@@ -45,6 +45,9 @@ class Engagement {
                 internalAccountID: json.InternalAccountID,
                 accountName: json.AccountName,
                 identifier: json.Identifier,
+                engagementTimezone: json.EngagementTimezone,
+                emailAddresses: json.EmailAddresses,
+                webhookAttributes: json.WebhookAttributes,
                 tags: json.Tags
             }
 
