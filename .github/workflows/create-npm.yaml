@@ -1,0 +1,21 @@
+name: Create NPM
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '**'
+      - '!.github/workflows/**'
+      - '!package.json'
+      - '!*.version'
+    branches:
+      - main
+
+jobs:
+  create-npm:
+    uses: optimove-tech/devops-main/.github/workflows/create-npm.yml@main
+    with:
+      NPM_FEED: optihub
+      PUBLISH_FOLDER: /
+      RUN_ARGUMENT: test
+      VERSION_PATCH_FOLDER: /
+    secrets: inherit
