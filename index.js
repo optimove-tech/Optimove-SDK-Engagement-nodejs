@@ -35,7 +35,7 @@ class Engagement {
                 promotions: json.Promotions,                
                 scheduledTime: json.ScheduledTime,
                 targetGroupName: json.TargetGroupName,
-                templateID: json.TemplateID,
+                templateID: parseInt(json.TemplateID),
                 templateName: json.TemplateName,
                 tenantID: parseInt(this.tenantID),
                 bucketName: this.bucketName,
@@ -146,7 +146,7 @@ class Engagement {
             .on('data', (item) => jsonString += item.toString(this.metadataEncoding))
             .on('end', () => {
                 try {
-                    resolve(JSONbig.parse(jsonString));
+                    resolve(JSON.parse(jsonString));
                 } 
                 catch (error) {
                     reject(error);
