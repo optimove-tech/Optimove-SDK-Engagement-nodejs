@@ -12,7 +12,7 @@ on:
 
 jobs:
   create-npm:
-    uses: optimove-tech/devops-main/.github/workflows/create-nuget.yml@main
+    uses: optimove-tech/devops-main/.github/workflows/create-npm.yml@main
     with:
       NPM_FEED: optihub
       PUBLISH_FOLDER: /
