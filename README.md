@@ -1,6 +1,6 @@
 # Optimove Engagement sdk 
 
-### How to use:
+### How to use: 
 
 1. Get a webhook from optimove
 2. Use the webhook values you got and create an instance of the engagement SDK
