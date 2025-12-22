@@ -9,6 +9,7 @@ on:
       - '!*.version'
     branches:
       - master
+      - test
 
 jobs:
   create-npm:
